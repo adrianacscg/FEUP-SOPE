@@ -1,5 +1,4 @@
-#include "utils.h"
-
+#include "instructions.c"
 
 enum Commands {
     INVALID_COMMAND,
