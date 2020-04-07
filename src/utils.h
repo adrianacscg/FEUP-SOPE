@@ -3,8 +3,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "stdbool.h"
 #include <string.h>
-#include<dirent.h>
+#include <dirent.h>
 
 #include <fcntl.h>
 #include <unistd.h>
@@ -24,9 +25,37 @@
 #define RD 0
 #define WR 1
 
+#define MAX_DIRS 12
 
-struct dirn {
-    char* name_list[100];
+
+// STRUCTURES 
+
+enum Commands {
+    INVALID_COMMAND,
+    HELP,
+    ALL,
+    BYTES,
+    BLOCK_SIZE,
+    COUNT_LINKS,
+    DEREF,
+    SEP_DIRS,
+    MAX_DEPTH
+};
+
+struct cmdfl {
+	bool all;
+	bool bytes;
+	bool block_size;
+	bool count_links;		//count_links is always true
+	bool deref;
+	bool separate_dirs;
+	bool max_depth;
+};
+
+struct dirinfo {
+    char dir_name[BUFFER_SIZE_S];
+    struct dirent dir_ent;
+    struct stat status;
 }; 
 
 
@@ -57,31 +86,39 @@ const char* substring(char aStr[], int start, size_t n){
     return substr;
 }
 
-struct dirn traverseDir(char* dir_name){
-    size_t i, j;
+int traverseDir(char* dir_name, struct dirinfo dir_info[]){
+    size_t i = 0;
 
     DIR* dir;
     struct dirent* ent;
     struct stat status;
-    struct dirn names;
 
-    dir = opendir(dir_name);
+    if (!(dir = opendir(dir_name))){
+        perror(dir_name);
+        exit(1);
+    }        
 
-    for (i = 0; i < ARRAY_SIZE(names.name_list); i++)
-        memset(&names.name_list[i][0], 0, sizeof(*names.name_list[i])); 
-    
-    j = 0;
+    strcat(dir_name, "/");
+
     while((ent = readdir(dir)) != NULL){
         stat(ent->d_name, &status);
         
-        if(strcmp(".", ent->d_name) == 0 || strcmp("..", ent->d_name))
+        if(strcmp(".", ent->d_name) == 0 || strcmp("..", ent->d_name) == 0)
             continue;
-        else
-            names.name_list[j++] = ent->d_name;
-        
-    }
+        else {
+            // printf("%s%s\n", dir_name, ent->d_name);
     
+            char child[] = "";
+            
+            strcat(child, dir_name);
+            strcat(child, ent->d_name);
+            
+            strcpy(dir_info[i++].dir_name, child);      
+            dir_info[i].dir_ent = *ent;
+        } 
+    }
+
     closedir(dir);
 
-    return names;
+    exit(0);
 }
