@@ -1,1 +1,1 @@
-simpledu.o: simpledu.c utils.h
+simpledu.o: simpledu.c instructions.h utils.h

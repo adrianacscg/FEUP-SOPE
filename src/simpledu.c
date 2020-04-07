@@ -1,4 +1,15 @@
-#include "instructions.c"
+#include "instructions.h"
+#include <limits.h>
+
+char* getCurrDir(){
+    size_t size = sizeof(char) * BUFFER_SIZE_L;
+    char* cwd = malloc(size);
+    
+    if (getcwd(cwd, size) == NULL)
+        perror("ERR");
+
+    return cwd;
+}
 
 enum Commands {
     INVALID_COMMAND,
@@ -71,7 +82,7 @@ int main(int argc, char* argv[]){
                 char line_7[] = "\t• -S, --separate-dirs – a informação exibida não inclui o tamanho dos subdiretórios;\n";
                 char line_8[] = "\t• --max-depth=N – limita a informação exibida a N (0,1, …) níveis de profundidade de diretórios.\n";
 
-                char help_msg[BUFFER_SIZE];
+                char help_msg[BUFFER_SIZE_L];
                 char* lines[8] = {line_1, line_2, line_3, line_4, line_5, line_6, line_7, line_8};                
                 
                 for (size_t i = 0; i < ARRAY_SIZE(lines); i++)
@@ -95,6 +106,16 @@ int main(int argc, char* argv[]){
     } else {
 
     }
+
+    /*
+    struct dirn dir_names = traverseDir(getCurrDir());
+
+    for (size_t i = 0; i < ARRAY_SIZE(dir_names.name_list); i++){
+
+        if (dir_names.name_list[i] != 0)
+            printf("%s\n", dir_names.name_list[i]);
+    }
+    */
 
     return 0;
 }
