@@ -1,7 +1,12 @@
 #include "instructions.h"
+#include "logHandle.h"
+
 
 int main(int argc, char* argv[]){
-	int fd1;
+
+	initiate_time_count();
+	create_log_file();
+	
     const char *arg = argv[1];
 
 	struct cmdfl cmd_flags;
@@ -13,17 +18,7 @@ int main(int argc, char* argv[]){
 	cmd_flags.separate_dirs = false;
 	cmd_flags.max_depth = false;
 
-	const char* log_file_name = getenv("LOG_FILENAME");
-
-	if (log_file_name == NULL) { 
-		log_file_name = "logFile.txt"; 	//ficheiro a usar se LOG_FILENAME não estiver definida
-	}
-    
-
-    if ((fd1 = open(log_file_name, O_WRONLY | O_CREAT | O_TRUNC, 0644)) == -1) {
-  		perror("Error on opening log file");
-        exit(1);
- 	}
+	
 
     switch (argc) {
         case 1: {
@@ -68,6 +63,7 @@ int main(int argc, char* argv[]){
             printf("%s\n", info[j].dir_name);
     }
     */
-
+    
+    close_log();
     return 0;
 }
