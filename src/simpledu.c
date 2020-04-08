@@ -2,7 +2,7 @@
 
 int main(int argc, char* argv[]){
 	int fd1;
-    const char arg[] = "argv[1]";
+    const char *arg = argv[1];
 
 	struct cmdfl cmd_flags;
 	cmd_flags.all = false;
@@ -15,7 +15,12 @@ int main(int argc, char* argv[]){
 
 	const char* log_file_name = getenv("LOG_FILENAME");
 
-    if ((fd1 = open(log_file_name, O_WRONLY | O_CREAT | O_EXCL, 0644)) == -1) {
+	if (log_file_name == NULL) { 
+		log_file_name = "logFile.txt"; 	//ficheiro a usar se LOG_FILENAME não estiver definida
+	}
+    
+
+    if ((fd1 = open(log_file_name, O_WRONLY | O_CREAT | O_TRUNC, 0644)) == -1) {
   		perror("Error on opening log file");
         exit(1);
  	}
@@ -42,7 +47,6 @@ int main(int argc, char* argv[]){
                     parseCommand(argv[i], &cmd_flags);
             } else {
                 // arg is a path
-                printf("Hi I'm here :D\n");
                 for(int i = 2; i < argc; i++)
                     parseCommand(argv[i], &cmd_flags);
             }

@@ -36,10 +36,11 @@ int parseCommand(char* cmdArg, struct cmdfl* cmd_flags){
         //cmd = BLOCK_SIZE;
         cmd_flags->block_size = true;
     }
+    /* This is useless, not sure if it might be usefull later tho so that's why I didn't delete it and decided to make a comment so you can then read this really long unnecessary comment that says something obvious and laugh and come give me a kiss because you read all this way even tho you hate comments and I love you :)
     else if (strcmp(cmdArg, "-l") == 0 || strcmp(cmdArg, "--count-links") == 0){
         //cmd = COUNT_LINKS;
         cmd_flags->count_links = true;
-    }
+    }*/
     else if (strcmp(cmdArg, "-L") == 0 || strcmp(cmdArg, "--dereference") == 0){
         //cmd = DEREF;
         cmd_flags->deref = true;
