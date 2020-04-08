@@ -87,6 +87,18 @@ const char* substring(char aStr[], int start, size_t n){
     return substr;
 }
 
+char* getCurrDir(){
+    size_t size = sizeof(char) * BUFFER_SIZE_L;
+    char* cwd = malloc(size);
+
+    if (getcwd(cwd, size) == NULL){
+        perror("ERR getcwd");
+        exit(1);
+    }
+
+    return cwd;
+}
+
 int traverseDir(char* dir_name, struct dirinfo dir_info[]){
     size_t i = 0;
 
@@ -121,5 +133,5 @@ int traverseDir(char* dir_name, struct dirinfo dir_info[]){
 
     closedir(dir);
 
-    exit(0);
+    return 0;
 }

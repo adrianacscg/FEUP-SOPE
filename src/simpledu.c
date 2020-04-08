@@ -49,7 +49,7 @@ int main(int argc, char* argv[]){
         }
     }
 
-    /*
+    
     char __dirname[BUFFER_SIZE_S]; 
     strcpy(__dirname, getCurrDir());
     printf("%s\n", __dirname);
@@ -62,7 +62,7 @@ int main(int argc, char* argv[]){
         if (strcmp(info[j].dir_name, "") != 0)
             printf("%s\n", info[j].dir_name);
     }
-    */
+    
     
     close_log();
     return 0;
