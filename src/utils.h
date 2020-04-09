@@ -27,21 +27,10 @@
 #define WR 1
 
 #define MAX_DIRS 100
+#define MAX_CMDS 10
 
 
 // STRUCTURES 
-
-enum Commands {
-    INVALID_COMMAND,
-    HELP,
-    ALL,
-    BYTES,
-    BLOCK_SIZE,
-    COUNT_LINKS,
-    DEREF,
-    SEP_DIRS,
-    MAX_DEPTH
-};
 
 enum actions{
 	CREATE,
@@ -59,7 +48,7 @@ struct cmdfl {
 	bool block_size;
 	bool count_links;		//count_links is always true
 	bool deref;
-	bool separate_dirs;
+	bool sep_dirs;
 	bool max_depth;
 };
 
@@ -76,6 +65,12 @@ const char* parse_input();
 
 const char* substring(char aStr[], int start, size_t n);
 
+bool arg_is_dir(char arg[]);
+
+bool is_symb_link(mode_t st_mode);
+
 char* get_curr_dir();
 
-int traverse_dir(char* dir_name, struct dirinfo dir_info[]);
+int traverse_dir(char* dir_name, struct dirinfo info[]);
+
+void duprintf(struct dirinfo info[], struct cmdfl cmd);

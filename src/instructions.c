@@ -3,7 +3,6 @@
 int parse_command(char* cmdArg, struct cmdfl* cmd_flags){
 
     if (strcmp(cmdArg, "-H")  == 0 || strcmp(cmdArg, "--help")  == 0){
-        //cmd = HELP;
         char line_1[] = "List of commands:\n";
         char line_2[] = "\t• -a, --all – a informação exibida diz respeito também a ficheiros;\n";
         char line_3[] = "\t• -b, --bytes – apresenta o número real de bytes de dados (ficheiros) ou alocados (diretórios);\n";
@@ -21,40 +20,23 @@ int parse_command(char* cmdArg, struct cmdfl* cmd_flags){
             
         int len = strlen(help_msg);
 
-        write(STDOUT_FILENO, help_msg, len);
-        
+        write(STDOUT_FILENO, help_msg, len);   
     }
-    else if (strcmp(cmdArg, "-a") == 0 || strcmp(cmdArg, "--all") == 0){
-        //cmd = ALL;
+    else if (strcmp(cmdArg, "-a") == 0 || strcmp(cmdArg, "--all") == 0)
         cmd_flags->all = true;
-    }
-    else if (strcmp(cmdArg, "-b") == 0 || strcmp(cmdArg, "--bytes") == 0){
-        //cmd = BYTES;
-        cmd_flags->bytes = true;
-    }
-    else if (strcmp(cmdArg, "-B") == 0 || strcmp(cmdArg, "--block-size") == 0){
-        //cmd = BLOCK_SIZE;
-        cmd_flags->block_size = true;
-    }
-    /* This is useless, not sure if it might be usefull later tho so that's why I didn't delete it and decided to make a comment so you can then read this really long unnecessary comment that says something obvious and laugh and come give me a kiss because you read all this way even tho you hate comments and I love you :)
-    else if (strcmp(cmdArg, "-l") == 0 || strcmp(cmdArg, "--count-links") == 0){
-        //cmd = COUNT_LINKS;
-        cmd_flags->count_links = true;
-    }*/
-    else if (strcmp(cmdArg, "-L") == 0 || strcmp(cmdArg, "--dereference") == 0){
-        //cmd = DEREF;
-        cmd_flags->deref = true;
-    }
-    else if (strcmp(cmdArg, "-S") == 0 || strcmp(cmdArg, "--separate-dirs") == 0){
-        //cmd = SEP_DIRS;
-        cmd_flags->separate_dirs = true;
-    }
-    else if (strcmp(cmdArg, "--max-depth") == 0){
-        //cmd = MAX_DEPTH;
-        cmd_flags->max_depth = true;
-    }
-    else{
-        //cmd = INVALID_COMMAND;
+    else if (strcmp(cmdArg, "-b") == 0 || strcmp(cmdArg, "--bytes") == 0)
+        cmd_flags->bytes = true;    
+    else if (strcmp(cmdArg, "-B") == 0 || strcmp(cmdArg, "--block-size") == 0)
+        cmd_flags->block_size = true;    
+    else if (strcmp(cmdArg, "-l") == 0 || strcmp(cmdArg, "--count-links") == 0)
+        cmd_flags->count_links = true;    
+    else if (strcmp(cmdArg, "-L") == 0 || strcmp(cmdArg, "--dereference") == 0)
+        cmd_flags->deref = true;    
+    else if (strcmp(cmdArg, "-S") == 0 || strcmp(cmdArg, "--separate-dirs") == 0)
+        cmd_flags->sep_dirs = true;    
+    else if (strcmp(cmdArg, "--max-depth") == 0)
+        cmd_flags->max_depth = true;    
+    else {
     	char error_msg[] = "Invalid command line argument.\nType --help or -H to get a list of possible input flags.\n";
         int len = strlen(error_msg);
         
@@ -64,4 +46,15 @@ int parse_command(char* cmdArg, struct cmdfl* cmd_flags){
     } 
 
     return 0;
+}
+
+
+void init_flags(struct cmdfl* cmd_flags){
+    cmd_flags->all = false;
+	cmd_flags->bytes = false;
+	cmd_flags->block_size = false;
+	cmd_flags->count_links = true;		
+	cmd_flags->deref = false;
+	cmd_flags->sep_dirs = false;
+	cmd_flags->max_depth = false;
 }

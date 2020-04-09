@@ -11,18 +11,8 @@ const char* parse_input(){
     return input;
 }
 
-const char* substring(char aStr[], int start, size_t n){
-    size_t size = n - (size_t)start;
-    char* substr = malloc(size);
-    size_t i;
-
-    for (i = 0; i < size - 1; i++){
-        substr[i] = aStr[start + i - 1];
-    }
-
-    substr[i] = '\0';
-
-    return substr;
+bool arg_is_dir(char arg[]){
+    return strchr(arg, '/') != NULL;
 }
 
 char* get_curr_dir(){
@@ -37,7 +27,7 @@ char* get_curr_dir(){
     return cwd;
 }
 
-int traverse_dir(char* dir_name, struct dirinfo dir_info[]){
+int traverse_dir(char* dir_name, struct dirinfo info[]){
     size_t i = 0;
 
     DIR* dir;
@@ -55,13 +45,35 @@ int traverse_dir(char* dir_name, struct dirinfo dir_info[]){
         if(strcmp(".", ent->d_name) == 0 || strcmp("..", ent->d_name) == 0)
             continue;
         else {
-            struct dirinfo* cur_dir = &dir_info[i++];
+            struct dirinfo* cur_dir = &info[i++];
             snprintf(cur_dir->dir_name, sizeof(cur_dir->dir_name), "%s/%s", dir_name, ent->d_name);
             cur_dir->dir_ent = *ent;
+            cur_dir->status = status;
         } 
     }
 
     closedir(dir);
 
     return 0;
+}
+
+bool is_symb_link(mode_t st_mode){
+    return S_ISLNK(st_mode);
+}
+
+void duprintf(struct dirinfo info[], struct cmdfl cmd){
+
+    char output[BUFFER_SIZE_L];    
+
+    for (size_t j = 0; j < MAX_DIRS; j++){
+        if (strcmp(info[j].dir_name, "") != 0){
+            if (cmd.all) {
+                if (cmd.bytes)
+                    printf("%ld\t%ld\t%s\n", info[j].status.st_blocks/2, info[j].status.st_size, info[j].dir_name);
+            }
+            else {
+                // if(S_ISDIR(ent->d_type & DT_DIR))
+            }
+        }
+    }
 }
