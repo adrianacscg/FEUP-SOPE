@@ -5,7 +5,7 @@
 int main(int argc, char* argv[], char* envp[]){
 
 	initiate_time_count();
-	create_log_file();    
+	create_log_file(argc, argv);    
 	
 	struct cmdfl cmd_flags;
 	init_flags(&cmd_flags);

@@ -1,0 +1,2 @@
+0.0000 - 00016537 - CREATE - ./simpledu/home/Desktop/FEUP/SOPE/Project/Projeto-SOPE/src-b
+0.0000 - 00016537 - EXIT - 0
