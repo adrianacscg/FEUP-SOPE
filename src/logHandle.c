@@ -1,6 +1,5 @@
 #include "logHandle.h"
 
-
 clock_t start, current;
 struct tms t;
 long ticks;
@@ -22,7 +21,7 @@ double instant_count(){
 
 int create_log_file(){
 	current_action = CREATE;
-	char *info = choose_info(current_action);
+	char* info = choose_info(current_action);
 
 	const char* log_file_name = getenv("LOG_FILENAME");
 
@@ -41,8 +40,9 @@ int create_log_file(){
  	return log_filedes;
 }
 
-char * choose_info(enum actions current_action){
-	char *info =" ";
+char* choose_info(enum actions current_action){
+	char* info = malloc(sizeof(char) * BUFFER_SIZE_L);
+
 	switch(current_action){
 		case CREATE: {
 			//os argumentos da linha de comandos
@@ -77,23 +77,20 @@ char * choose_info(enum actions current_action){
 			break;
 		}
 	}
+
 	return info;
 }
 
 void write_to_log(char action, char *info){
 
 	double instant = instant_count();
-	char instant_arr[8];
+	char instant_arr[8], log[BUFFER_SIZE_S];
+
 	pid_t pid = getpid();
-
-	char log[BUFFER_SIZE_S];
-
-	snprintf(instant_arr, 8, "%2.4f", instant);
-
-	sprintf(log, instant_arr, pid, action, info);
-
 	size_t nbytes = strlen(log);
 
+	snprintf(instant_arr, 8, "%2.4f", instant);
+	sprintf(log, instant_arr, pid, action, info);
     write(log_filedes, log, nbytes);
 }
 

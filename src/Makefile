@@ -1,25 +1,34 @@
 CC=gcc
-CFLAGS=-Wall -Wextra -Werror -Wno-unused-parameter -pedantic
-TARGETS = $(patsubst %.c,%,$(wildcard *.c))
+RM=rm -f
 
-define make_target
-$(1): $(1).o
-	$(CC) $(CFLAGS) $$^ -o $$@
-endef
+CFLAGS=-g -Wall -I. -D_GNU_SOURCE
+LDFLAGS=-g
+LDLIBS=
 
-.PHONY: all clean
-all: $(TARGETS)
+#Depend file 
+DEPFILE=.depend
+DEPTEXT='\#MAKE .DEPEND FILE'
 
-ifdef DEV_INFO
-DEV_FLAGS = -save-temps
-endif
+#Defining sources and objects
+SRCS=$(wildcard *.c)
+OBJS=$(subst .c,.o,$(SRCS))
 
-$(foreach TARGET,$(TARGETS),$(eval $(call make_target,$(TARGET))))
+all: main
 
-%.o: %.c
-	$(CC) $(CFLAGS) $(DEV_FLAGS) -MMD -c $< -o $@
+main: $(OBJS)
+	$(CC) $(LDFLAGS) -o simpledu $(OBJS) $(LDLIBS)
+
+depend: $(DEPFILE)
+
+$(DEPFILE): $(SRCS)
+	$(RM) $(DEPFILE)
+	echo $(DEPTEXT) > $(DEPFILE)
+	$(CC) $(CFLAGS) -MM $^>>$(DEPFILE);
 
 clean:
-	rm -f $(TARGETS) *.o *.d *.i *.s
+	$(RM) $(OBJS)
 
--include $(TARGETS:=.d)
+distclean: clean
+	$(RM) *~ $(DEPFILE)
+
+include $(DEPFILE)
