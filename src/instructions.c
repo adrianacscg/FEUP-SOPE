@@ -1,5 +1,6 @@
 #include "instructions.h"
 
+
 int parse_command(char* cmdArg, struct cmdfl* cmd_flags){
 
     if (strcmp(cmdArg, "-H")  == 0 || strcmp(cmdArg, "--help")  == 0){
@@ -58,3 +59,150 @@ void init_flags(struct cmdfl* cmd_flags){
 	cmd_flags->sep_dirs = false;
 	cmd_flags->max_depth = false;
 }
+
+
+int traverse_dir(char* dir_name, struct dirinfo info[]){
+    size_t i = 0;
+
+    DIR* dir;
+    struct dirent* ent;
+    struct stat status;
+
+    if (!(dir = opendir(dir_name))){
+        perror(dir_name);
+        exit(1);
+    }        
+
+    while((ent = readdir(dir)) != NULL){
+        stat(ent->d_name, &status);
+    
+        struct dirinfo* cur_dir = &info[i++];
+        snprintf(cur_dir->dir_name, sizeof(cur_dir->dir_name), "%s/%s", dir_name, ent->d_name);
+        cur_dir->dir_ent = *ent;
+        cur_dir->status = status;     
+    }
+
+    closedir(dir);
+
+    return 0;
+}
+
+
+void duprintf(struct dirinfo info[], struct cmdfl cmd){
+
+    for (size_t j = 0; j < MAX_DIRS; j++){
+        // If it's not an empty element of the array
+        if (strcmp(info[j].dir_name, "") != 0){
+            if (cmd.count_links){
+                // Symbolic link check
+                if (!cmd.deref){
+                    if (!S_ISLNK(info[j].status.st_mode)){
+                        if (cmd.all){
+                            if (cmd.bytes)
+                                printf("%ld\t%ld\t%s\n", info[j].status.st_blocks/2, info[j].status.st_size, info[j].dir_name);
+                            else if (cmd.block_size)
+                                printf("%ld\t%s\n", (info[j].status.st_blocks*512)/blk_size, info[j].dir_name);
+                            else 
+                                printf("%ld\t%s\n", info[j].status.st_blocks/2, info[j].dir_name);
+                        } else {
+                            // Directory check
+                            if (S_ISDIR(info[j].status.st_mode)){
+                                if (cmd.bytes)
+                                    printf("%ld\t%ld\t%s\n", info[j].status.st_blocks/2, info[j].status.st_size, info[j].dir_name);
+                                else if (cmd.block_size)
+                                    printf("%ld\t%s\n", (info[j].status.st_blocks*512)/blk_size, info[j].dir_name);
+                                else 
+                                    printf("%ld\t%s\n", info[j].status.st_blocks/2, info[j].dir_name);
+                                
+                            }
+                        }
+                    }
+                } else {
+                    if (cmd.all){
+                        if (cmd.bytes)
+                            printf("%ld\t%ld\t%s\n", info[j].status.st_blocks/2, info[j].status.st_size, info[j].dir_name);
+                        else if (cmd.block_size)
+                            printf("%ld\t%s\n", (info[j].status.st_blocks*512)/blk_size, info[j].dir_name);
+                        else 
+                            printf("%ld\t%s\n", info[j].status.st_blocks/2, info[j].dir_name);
+                    } else {
+                        // Directory check
+                        if (S_ISDIR(info[j].status.st_mode)){
+                            if (cmd.bytes)
+                                printf("%ld\t%ld\t%s\n", info[j].status.st_blocks/2, info[j].status.st_size, info[j].dir_name);
+                            else if (cmd.block_size)
+                                printf("%ld\t%s\n", (info[j].status.st_blocks*512)/blk_size, info[j].dir_name);
+                            else 
+                                printf("%ld\t%s\n", info[j].status.st_blocks/2, info[j].dir_name);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/*
+void parent(int fd_in){
+    int dir_size;
+
+    read(fd_in, &a, sizeof(a));
+
+    write(fd_out, &a, sizeof(a));
+    write(fd_out, &b, sizeof(b));
+
+    close(fd_out);
+}
+
+
+void child(int fd_out, int dir_size){
+    int a, b;
+
+    read(fd_in, &b, sizeof(b));
+
+    printf("%d + %d = %d\n", a, b, add(a,b));
+    printf("%d - %d = %d\n", a, b, sub(a,b));
+    printf("%d * %d = %d\n", a, b, mul(a,b));
+    if (b != 0)
+        printf("%d / %d = %f\n", a, b, divide(a,b));
+
+    close(fd_in);
+}
+
+
+void fetch_dir_info(char dir_name[], struct cmdfl cmd_flags){
+    int fd[2], status;
+    pid_t pid; 
+
+    struct dirinfo info[MAX_DIRS]; 
+
+    if (pipe(fd) < 0) {
+        fprintf(stderr, "pipe error\n");
+        exit(1);
+    }
+
+    traverse_dir(dir_name, info);
+
+    for (size_t i = 0; i < ARRAY_SIZE(info); i++){
+        if (S_ISDIR(info[i].status.st_mode)){   
+
+            switch ((pid = fork())) {
+                case -1:
+                    fprintf(stderr, "fork error\n");
+                    exit(2);
+                case 0:
+                    close(fd[WR]);
+                    child(fd[RD]);
+                    break;
+                default:
+                    close(fd[RD]);
+                    parent(fd[WR], atoi(argv[1]), atoi(argv[2]));
+                    waitpid(pid, &status, WNOHANG);
+                    break;
+            }
+        }
+    }
+
+    duprintf(info, cmd_flags);            
+}
+*/

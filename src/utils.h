@@ -30,6 +30,11 @@
 #define MAX_CMDS 10
 
 
+// GLOBALS
+
+int blk_size;
+
+
 // STRUCTURES 
 
 enum actions{
@@ -42,22 +47,6 @@ enum actions{
 	ENTRY
 };
 
-struct cmdfl {
-	bool all;
-	bool bytes;
-	bool block_size;
-	bool count_links;		//count_links is always true
-	bool deref;
-	bool sep_dirs;
-	bool max_depth;
-};
-
-struct dirinfo {
-    char dir_name[BUFFER_SIZE_L];
-    struct dirent dir_ent;
-    struct stat status;
-}; 
-
 
 // VARIOUS
 
@@ -67,10 +56,5 @@ const char* substring(char aStr[], int start, size_t n);
 
 bool arg_is_dir(char arg[]);
 
-bool is_symb_link(mode_t st_mode);
-
 char* get_curr_dir();
 
-int traverse_dir(char* dir_name, struct dirinfo info[]);
-
-void duprintf(struct dirinfo info[], struct cmdfl cmd);
