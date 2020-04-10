@@ -68,7 +68,7 @@ void write_to_log(char *current_action_str, char *info){
 void exit_log(int status){
 	strcpy(current_action, "EXIT");
 	sprintf(info, "%d", status);
-	printf("%s \n", info);
+	// printf("%s \n", info);
 	write_to_log(current_action, info);
 	close(log_filedes);
 	exit(status);
