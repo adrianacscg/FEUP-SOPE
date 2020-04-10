@@ -1,4 +1,7 @@
-0.00 - 00012485 - CREATE - ./simpledu
-0.00 - 00012485 - EXIT - 0
-0.00 - 00012492 - EXIT - 0
-0.00 - 00012489 - EXIT - 0
+0.00 - 00003218 - CREATE - ./simpledu/home/tohgo/Workspace/FEUP/SOPE/projetos/simpledu/test
+0.98 - 00003222 - EXIT - 0
+0.98 - 00004673 - EXIT - 0
+1.00 - 00003218 - EXIT - 0
+1.00 - 00003220 - EXIT - 0
+1.00 - 00007598 - EXIT - 0
+1.00 - 00006882 - EXIT - 0

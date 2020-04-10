@@ -66,6 +66,7 @@ void init_flags(struct cmdfl* cmd_flags){
 
 
 int traverse_dir(char dir_name[], struct dirinfo info[], struct cmdfl cmd_flags){
+    char path[BUFFER_SIZE_L];
     int dir_size = 0;
     size_t i = 0;
 
@@ -73,28 +74,31 @@ int traverse_dir(char dir_name[], struct dirinfo info[], struct cmdfl cmd_flags)
     struct dirent* ent;
     struct stat status;
 
-    if (!(dir = opendir(dir_name))){
+    if ((dir = opendir(dir_name)) == NULL){
         perror(dir_name);
         exit(DIR_ERROR);
     }        
 
     while((ent = readdir(dir)) != NULL){
+
+        snprintf(path, sizeof(path), "%s/%s", dir_name, ent->d_name);
+
         if (cmd_flags.deref) {
-            if (stat(ent->d_name, &status) == STAT_ERROR){
-                perror(ent->d_name);
+            if (stat(path, &status) == STAT_ERROR){
+                perror(path);
                 exit(STAT_ERROR);
             } 
-        } else if (lstat(ent->d_name, &status) == STAT_ERROR) {
-            perror(ent->d_name);
+        } else if (lstat(path, &status) == STAT_ERROR) {
+            perror(path);
             exit(STAT_ERROR);
         }
-
 
         if(strcmp("..", ent->d_name) == EXIT_SUCCESS)  
             continue;    
         else {
             struct dirinfo* cur_dir = &info[i++];
             snprintf(cur_dir->dir_name, sizeof(cur_dir->dir_name), "%s", ent->d_name);
+            snprintf(cur_dir->path, sizeof(cur_dir->path), "%s", path);
             cur_dir->dir_ent = *ent;
             cur_dir->status = status;  
     
@@ -183,17 +187,18 @@ void parent(int fd_in, pid_t pid, int* dir_size){
 }
 
 
-void child(int fd_out, char dir_name[], struct cmdfl cmd_flags){
-    curr_depth--;
+void child(int fd_out, pid_t pid, char path[], struct cmdfl cmd_flags){
+    if (getpgrp() == pid_main)
+        setpgid(pid, getpid());
 
-    int dir_size = fetch_dir_info(dir_name, cmd_flags);       
+    int dir_size = fetch_dir_info(path, cmd_flags);       
              
     write(fd_out, &dir_size, sizeof(dir_size));
     close(fd_out);
 }
 
 
-int fetch_dir_info(char dir_name[], struct cmdfl cmd_flags){
+int fetch_dir_info(char path[], struct cmdfl cmd_flags){
 
     if (curr_depth == 0)    
         return EXIT_SUCCESS;    
@@ -201,13 +206,14 @@ int fetch_dir_info(char dir_name[], struct cmdfl cmd_flags){
     int fd[2], status, dir_size;
     pid_t pid; 
 
-    struct dirinfo info[MAX_DIRS]; 
+    struct dirinfo dir_info[MAX_DIRS]; 
 
-    dir_size = traverse_dir(dir_name, info, cmd_flags);
-    duprintf(info, cmd_flags); 
+    dir_size = traverse_dir(path, dir_info, cmd_flags);
+    duprintf(dir_info, cmd_flags); 
 
-    for (size_t i = 0; i < ARRAY_SIZE(info); i++){
-        if (S_ISDIR(info[i].status.st_mode)){   
+    for (size_t i = 0; i < ARRAY_SIZE(dir_info); i++){
+        if (S_ISDIR(dir_info[i].status.st_mode)){   
+            curr_depth--;
 
             if (pipe(fd) < 0) {
                 perror("pipe error");
@@ -220,7 +226,7 @@ int fetch_dir_info(char dir_name[], struct cmdfl cmd_flags){
                     exit(FORK_ERROR);
                 case 0:
                     close(fd[RD]);
-                    child(fd[WR], info[i].dir_name, cmd_flags);
+                    child(fd[WR], pid, dir_info[i].dir_name, cmd_flags);
                     break;
                 default:
                     close(fd[WR]);

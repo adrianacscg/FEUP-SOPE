@@ -20,6 +20,7 @@ struct cmdfl {
 
 struct dirinfo {
     char dir_name[BUFFER_SIZE_L];
+    char path[BUFFER_SIZE_L];
     struct dirent dir_ent;
     struct stat status;
 }; 
@@ -35,6 +36,6 @@ void duprintf(struct dirinfo info[], struct cmdfl cmd);
 
 void parent(int fd_in, pid_t pid, int* dir_size);
 
-void child(int fd_out, char dir_name[], struct cmdfl cmd_flags);
+void child(int fd_out, pid_t pid, char dir_name[], struct cmdfl cmd_flags);
 
 int fetch_dir_info(char dir_name[], struct cmdfl cmd_flags);
