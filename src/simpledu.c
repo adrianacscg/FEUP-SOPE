@@ -1,5 +1,7 @@
 #include "instructions.h"
 #include "logHandle.h"
+#include "sigHandle.h"
+#include <signal.h>
 
 
 int main(int argc, char* argv[], char* envp[]){
@@ -12,6 +14,8 @@ int main(int argc, char* argv[], char* envp[]){
     
 	struct cmdfl cmd_flags;
 	init_flags(&cmd_flags);
+
+    signal(SIGINT, SIGINT_handler);
 
 
     switch (argc) {

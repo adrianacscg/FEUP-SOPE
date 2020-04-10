@@ -1,5 +1,6 @@
 #MAKE .DEPEND FILE
+sigHandle.o: sigHandle.c
 instructions.o: instructions.c instructions.h utils.h
 logHandle.o: logHandle.c logHandle.h utils.h
-simpledu.o: simpledu.c instructions.h utils.h logHandle.h
+simpledu.o: simpledu.c instructions.h utils.h logHandle.h sigHandle.h
 utils.o: utils.c utils.h

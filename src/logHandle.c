@@ -72,7 +72,6 @@ void close_log(){
 void exit_log(int status){
 	strcpy(current_action, "EXIT");
 	sprintf(info, "%d", status);
-	//strcpy(info, status);
 	write_to_log(current_action, info);
 }
 

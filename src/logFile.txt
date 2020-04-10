@@ -1,2 +1,2 @@
-0.0000 - 00009476 - CREATE - ./simpledu/foo/bar-a
-0.0000 - 00009476 - EXIT - 0
+0.0000 - 00017581 - CREATE - ./simpledu/home/Desktop/FEUP/SOPE/Project/Projeto-SOPE/src-b
+0.0000 - 00017581 - EXIT - 0
