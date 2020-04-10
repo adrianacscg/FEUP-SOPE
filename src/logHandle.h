@@ -12,17 +12,15 @@ double instant_count();
 
 void write_to_log(char *current_action, char *info);
 
-void close_log();
-
 void choose_info(enum actions current_action);
 
 void create_log();
 
 void exit_log(int status);
 
-void recv_sig_log(int signal);
+void recv_sig_log(char * signal);
 
-void send_sig_log(pid_t pid, int signal);
+void send_sig_log(pid_t pid, char * signal);
 
 void recv_pipe_log(char * message);
 

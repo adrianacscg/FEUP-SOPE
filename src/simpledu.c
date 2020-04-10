@@ -16,6 +16,9 @@ int main(int argc, char* argv[], char* envp[]){
 	init_flags(&cmd_flags);
 
     signal(SIGINT, SIGINT_handler);
+    /*signal(SIGTERM,SIGTERM_handler);
+    signal(SIGTSTP,SIGTSTP_handler);
+    signal(SIGCONT,SIGCONT_handler);*/
 
 
     switch (argc) {
@@ -69,8 +72,8 @@ int main(int argc, char* argv[], char* envp[]){
             break;
         }
     }
-        
-    close_log();
+    sleep(5);    
+    exit_log(0);
 
     return 0;
 }

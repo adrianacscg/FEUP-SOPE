@@ -55,7 +55,7 @@ void write_to_log(char *current_action_str, char *info){
 
 	pid_t pid = getpid();
 
-	snprintf(instant_arr, 8, "%2.4f", instant);
+	snprintf(instant_arr, 8, "%2.2f", instant);
 
 	sprintf(log,"%s - %.8d - %s - %s\n" ,instant_arr, pid, current_action_str, info);
 
@@ -64,15 +64,14 @@ void write_to_log(char *current_action_str, char *info){
 }
 
 
-void close_log(){
-	exit_log(0);
-	close(log_filedes);
-}
 
 void exit_log(int status){
 	strcpy(current_action, "EXIT");
 	sprintf(info, "%d", status);
+	printf("%s \n", info);
 	write_to_log(current_action, info);
+	close(log_filedes);
+	exit(status);
 }
 
 void create_log(){
@@ -81,15 +80,14 @@ void create_log(){
 	write_to_log(current_action, info);
 }
 
-void recv_sig_log(int signal){
-	sprintf(info, "%d", signal);
-	//strcpy(info, signal);
+void recv_sig_log(char * signal){
+	strcpy(info, signal);
 	strcpy(current_action, "RECV_SIGNAL");
 	write_to_log(current_action, info);
 }
 
-void send_sig_log(pid_t pid, int signal){
-	sprintf(info,"%d %d" ,pid, signal);
+void send_sig_log(pid_t pid, char * signal){
+	sprintf(info,"%d %s" ,pid, signal);
 	strcpy(current_action, "SEND_SIGNAL");
 	write_to_log(current_action, info);
 }
