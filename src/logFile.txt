@@ -1,3 +1,4 @@
-0.00 - 00021737 - CREATE - ./simpledu/home/adriana/Desktop/FEUP/SOPE/Project/Projeto-SOPE/src--all
-1.23 - 00021737 - RECV_SIGNAL - SIGINT
-1.23 - 00021737 - SEND_SIGNAL - 21737 SIGTSTP
+0.00 - 00012485 - CREATE - ./simpledu
+0.00 - 00012485 - EXIT - 0
+0.00 - 00012492 - EXIT - 0
+0.00 - 00012489 - EXIT - 0

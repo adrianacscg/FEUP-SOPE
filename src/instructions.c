@@ -1,5 +1,7 @@
 #include "instructions.h"
 
+int curr_depth;
+pid_t pid_main, pid_child;
 
 int parse_command(char* cmdArg, struct cmdfl* cmd_flags){
 
@@ -21,7 +23,9 @@ int parse_command(char* cmdArg, struct cmdfl* cmd_flags){
             
         int len = strlen(help_msg);
 
-        write(STDOUT_FILENO, help_msg, len);   
+        write(STDOUT_FILENO, help_msg, len); 
+
+        exit(1);
     }
     else if (strcmp(cmdArg, "-a") == 0 || strcmp(cmdArg, "--all") == 0)
         cmd_flags->all = true;
@@ -46,7 +50,7 @@ int parse_command(char* cmdArg, struct cmdfl* cmd_flags){
         exit(1);
     } 
 
-    return 0;
+    return EXIT_SUCCESS;
 }
 
 
@@ -61,7 +65,8 @@ void init_flags(struct cmdfl* cmd_flags){
 }
 
 
-int traverse_dir(char* dir_name, struct dirinfo info[]){
+int traverse_dir(char dir_name[], struct dirinfo info[], struct cmdfl cmd_flags){
+    int dir_size = 0;
     size_t i = 0;
 
     DIR* dir;
@@ -70,21 +75,43 @@ int traverse_dir(char* dir_name, struct dirinfo info[]){
 
     if (!(dir = opendir(dir_name))){
         perror(dir_name);
-        exit(1);
+        exit(DIR_ERROR);
     }        
 
     while((ent = readdir(dir)) != NULL){
-        stat(ent->d_name, &status);
+        if (cmd_flags.deref) {
+            if (stat(ent->d_name, &status) == STAT_ERROR){
+                perror(ent->d_name);
+                exit(STAT_ERROR);
+            } 
+        } else if (lstat(ent->d_name, &status) == STAT_ERROR) {
+            perror(ent->d_name);
+            exit(STAT_ERROR);
+        }
+
+
+        if(strcmp("..", ent->d_name) == EXIT_SUCCESS)  
+            continue;    
+        else {
+            struct dirinfo* cur_dir = &info[i++];
+            snprintf(cur_dir->dir_name, sizeof(cur_dir->dir_name), "%s", ent->d_name);
+            cur_dir->dir_ent = *ent;
+            cur_dir->status = status;  
     
-        struct dirinfo* cur_dir = &info[i++];
-        snprintf(cur_dir->dir_name, sizeof(cur_dir->dir_name), "%s/%s", dir_name, ent->d_name);
-        cur_dir->dir_ent = *ent;
-        cur_dir->status = status;     
+            if(strcmp(".", ent->d_name) == EXIT_SUCCESS){
+                if (cmd_flags.bytes)
+                    dir_size += status.st_size;
+                else if (cmd_flags.block_size)
+                    dir_size += (status.st_blocks*512)/blk_size;
+                else 
+                    dir_size += status.st_blocks/2;
+            }
+        }
     }
 
     closedir(dir);
 
-    return 0;
+    return dir_size;
 }
 
 
@@ -142,67 +169,69 @@ void duprintf(struct dirinfo info[], struct cmdfl cmd){
     }
 }
 
-/*
-void parent(int fd_in){
-    int dir_size;
 
-    read(fd_in, &a, sizeof(a));
+void parent(int fd_in, pid_t pid, int* dir_size){
+    int child_dir_size;
 
-    write(fd_out, &a, sizeof(a));
-    write(fd_out, &b, sizeof(b));
+    if (getpgrp() == pid_main)
+        pid_child = pid;
 
-    close(fd_out);
-}
-
-
-void child(int fd_out, int dir_size){
-    int a, b;
-
-    read(fd_in, &b, sizeof(b));
-
-    printf("%d + %d = %d\n", a, b, add(a,b));
-    printf("%d - %d = %d\n", a, b, sub(a,b));
-    printf("%d * %d = %d\n", a, b, mul(a,b));
-    if (b != 0)
-        printf("%d / %d = %f\n", a, b, divide(a,b));
+    read(fd_in, &child_dir_size, sizeof(child_dir_size));
+    *dir_size += child_dir_size;
 
     close(fd_in);
 }
 
 
-void fetch_dir_info(char dir_name[], struct cmdfl cmd_flags){
-    int fd[2], status;
+void child(int fd_out, char dir_name[], struct cmdfl cmd_flags){
+    curr_depth--;
+
+    int dir_size = fetch_dir_info(dir_name, cmd_flags);       
+             
+    write(fd_out, &dir_size, sizeof(dir_size));
+    close(fd_out);
+}
+
+
+int fetch_dir_info(char dir_name[], struct cmdfl cmd_flags){
+
+    if (curr_depth == 0)    
+        return EXIT_SUCCESS;    
+
+    int fd[2], status, dir_size;
     pid_t pid; 
 
     struct dirinfo info[MAX_DIRS]; 
 
-    if (pipe(fd) < 0) {
-        fprintf(stderr, "pipe error\n");
-        exit(1);
-    }
-
-    traverse_dir(dir_name, info);
+    dir_size = traverse_dir(dir_name, info, cmd_flags);
+    duprintf(info, cmd_flags); 
 
     for (size_t i = 0; i < ARRAY_SIZE(info); i++){
         if (S_ISDIR(info[i].status.st_mode)){   
 
+            if (pipe(fd) < 0) {
+                perror("pipe error");
+                exit(PIPE_ERROR);
+            }
+
             switch ((pid = fork())) {
                 case -1:
-                    fprintf(stderr, "fork error\n");
-                    exit(2);
+                    perror("fork error");
+                    exit(FORK_ERROR);
                 case 0:
-                    close(fd[WR]);
-                    child(fd[RD]);
+                    close(fd[RD]);
+                    child(fd[WR], info[i].dir_name, cmd_flags);
                     break;
                 default:
-                    close(fd[RD]);
-                    parent(fd[WR], atoi(argv[1]), atoi(argv[2]));
+                    close(fd[WR]);
+                    parent(fd[RD], pid, &dir_size);
                     waitpid(pid, &status, WNOHANG);
                     break;
             }
         }
     }
 
-    duprintf(info, cmd_flags);            
+    pid_child = 0;    
+
+    return dir_size;
 }
-*/

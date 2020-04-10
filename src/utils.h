@@ -50,7 +50,7 @@ enum actions{
 
 // VARIOUS
 
-const char* parse_input();
+const char* cin();
 
 const char* substring(char aStr[], int start, size_t n);
 

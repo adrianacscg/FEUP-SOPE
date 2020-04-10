@@ -1,6 +1,6 @@
 #include "utils.h"
 
-const char* parse_input(){
+const char* cin(){
     char ch;
     char* input = malloc(sizeof(char) * BUFFER_SIZE_S);
     int i = 0;

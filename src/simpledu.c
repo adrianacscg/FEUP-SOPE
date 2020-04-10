@@ -3,12 +3,17 @@
 #include "sigHandle.h"
 #include <signal.h>
 
+extern int curr_depth;
+extern pid_t pid_main;
 
 int main(int argc, char* argv[], char* envp[]){
 
 	initiate_time_count();
 	create_log_file(argc, argv);    
 	
+    pid_main = getpgrp();
+    curr_depth = 3;
+
     char __dirname[BUFFER_SIZE_S]; 
     strcpy(__dirname, get_curr_dir());
     
@@ -16,24 +21,21 @@ int main(int argc, char* argv[], char* envp[]){
 	init_flags(&cmd_flags);
 
     signal(SIGINT, SIGINT_handler);
-    /*signal(SIGTERM,SIGTERM_handler);
-    signal(SIGTSTP,SIGTSTP_handler);
-    signal(SIGCONT,SIGCONT_handler);*/
 
 
     switch (argc) {
         case 1: {
-            // fetch_dir_info(__dirname, cmd_flags);
+            fetch_dir_info(__dirname, cmd_flags);
             break;
         }
         case 2: {
             if (arg_is_dir(argv[1])){
                 // argv[1] is a path
-                // fetch_dir_info(argv[1], cmd_flags); 
+                fetch_dir_info(argv[1], cmd_flags); 
             } else {
 			    // argv[1] is a command
 			    parse_command(argv[1], &cmd_flags);
-                // fetch_dir_info(__dirname, cmd_flags); 
+                fetch_dir_info(__dirname, cmd_flags); 
             }
             
             break;
@@ -52,7 +54,7 @@ int main(int argc, char* argv[], char* envp[]){
                     }
                 }
 
-                // fetch_dir_info(argv[1], cmd_flags);
+                fetch_dir_info(argv[1], cmd_flags);
             } else {
                 // argv[1] is a command
                 for(int i = 1; i < argc - 1; i++)
@@ -66,15 +68,13 @@ int main(int argc, char* argv[], char* envp[]){
                     }
                 }
 
-                // fetch_dir_info(argv[argc-1], cmd_flags);
+                fetch_dir_info(argv[argc-1], cmd_flags);
             }
 
             break;
         }
     }
-    sleep(5);    
-    exit_log(0);
-
-    return 0;
+        
+    exit_log(EXIT_SUCCESS);
 }
 
