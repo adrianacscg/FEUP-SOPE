@@ -1,4 +1,11 @@
-0.00 - 00014174 - CREATE - ./simpledu/home/tohgo/Workspace/FEUP/SOPE/projetos/test2
-0.01 - 00014176 - EXIT - 0
-0.01 - 00014174 - EXIT - 0
-0.01 - 00014177 - EXIT - 0
+0.00 - 00018229 - CREATE - ./simpledu/home/tohgo/Workspace/FEUP/SOPE/projetos/simpledu/test-S-b-a
+0.00 - 00018230 - CREATE - ./simpledu/home/tohgo/Workspace/FEUP/SOPE/projetos/simpledu/test-S-b-a
+0.00 - 00018231 - CREATE - ./simpledu/home/tohgo/Workspace/FEUP/SOPE/projetos/simpledu/test-S-b-a
+0.00 - 00018231 - SEND_PIPE - 4544
+0.00 - 00018231 - SEND_PIPE - 8640
+0.00 - 00018231 - EXIT - 0
+0.00 - 00018230 - RECV_PIPE - 4544
+0.01 - 00018229 - RECV_PIPE - 8640
+0.01 - 00018230 - RECV_SIGNAL - SIGTERM
+0.01 - 00018230 - EXIT - 10
+2.01 - 00018229 - EXIT - 0

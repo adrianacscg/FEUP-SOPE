@@ -1,6 +1,8 @@
 #pragma once
 
 #include "utils.h"
+#include "logHandle.h"
+#include "sigHandle.h"
 
 #define STAT_ERROR -1
 #define DIR_ERROR 2
@@ -23,6 +25,7 @@ struct dirinfo {
     char path[BUFFER_SIZE_L];
     struct dirent dir_ent;
     struct stat status;
+    int size;
 }; 
 
 
@@ -32,10 +35,10 @@ void init_flags();
 
 int traverse_dir(char dir_name[], struct dirinfo info[], struct cmdfl cmd_flags);
 
-void duprintf(struct dirinfo info[], struct cmdfl cmd);
+int get_max_children(struct dirinfo info[]);
 
 void parent(int fd_in, pid_t pid, int* dir_size);
 
-void child(int fd_out, pid_t pid, char dir_name[], struct cmdfl cmd_flags);
+void child(int fd_out, pid_t pid, char dir_name[], struct cmdfl cmd_flags, int dir_size);
 
 int fetch_dir_info(char dir_name[], struct cmdfl cmd_flags);

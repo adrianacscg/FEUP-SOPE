@@ -1,7 +1,8 @@
 #include "instructions.h"
 
-int curr_depth;
-pid_t pid_main, pid_child;
+bool root = true;
+int curr_depth, max_depth;
+pid_t pid_main, pid_child = 0;
 
 int parse_command(char* cmdArg, struct cmdfl* cmd_flags){
 
@@ -25,13 +26,13 @@ int parse_command(char* cmdArg, struct cmdfl* cmd_flags){
 
         write(STDOUT_FILENO, help_msg, len); 
 
-        exit(1);
+        exit_log(1);
     }
     else if (strcmp(cmdArg, "-a") == 0 || strcmp(cmdArg, "--all") == 0)
         cmd_flags->all = true;
     else if (strcmp(cmdArg, "-b") == 0 || strcmp(cmdArg, "--bytes") == 0)
         cmd_flags->bytes = true;    
-    else if (strcmp(cmdArg, "-B") == 0 || strcmp(cmdArg, "--block-size") == 0)
+    else if (strcmp(cmdArg, "-B") == 0 || (strlen(cmdArg) >= 12 && strcmp(substring(cmdArg, 1, 12), "--block-size") == 0))
         cmd_flags->block_size = true;    
     else if (strcmp(cmdArg, "-l") == 0 || strcmp(cmdArg, "--count-links") == 0)
         cmd_flags->count_links = true;    
@@ -39,15 +40,18 @@ int parse_command(char* cmdArg, struct cmdfl* cmd_flags){
         cmd_flags->deref = true;    
     else if (strcmp(cmdArg, "-S") == 0 || strcmp(cmdArg, "--separate-dirs") == 0)
         cmd_flags->sep_dirs = true;    
-    else if (strcmp(cmdArg, "--max-depth") == 0)
-        cmd_flags->max_depth = true;    
+    else if (strlen(cmdArg) >= 11 && strcmp(substring(cmdArg, 1, 11), "--max-depth") == 0){
+        cmd_flags->max_depth = true;
+        max_depth = atoi(substring(cmdArg, 13, strlen(cmdArg)));    
+        curr_depth = max_depth;
+    }
     else {
     	char error_msg[] = "Invalid command line argument.\nType --help or -H to get a list of possible input flags.\n";
         int len = strlen(error_msg);
         
         write(STDERR_FILENO, error_msg, len);
         
-        exit(1);
+        exit_log(1);
     } 
 
     return EXIT_SUCCESS;
@@ -76,25 +80,29 @@ int traverse_dir(char dir_name[], struct dirinfo info[], struct cmdfl cmd_flags)
 
     if ((dir = opendir(dir_name)) == NULL){
         perror(dir_name);
-        exit(DIR_ERROR);
+        exit_log(DIR_ERROR);
     }        
 
     while((ent = readdir(dir)) != NULL){
 
         if(strcmp("..", ent->d_name) == EXIT_SUCCESS)  
-            continue;    
+            continue;   
+        else if ((strcmp(".", ent->d_name) == EXIT_SUCCESS) && !root)
+            continue;
         else {
+            if (strcmp(".", ent->d_name) == 0 && root)
+                root = false;
 
             snprintf(path, sizeof(path), "%s/%s", dir_name, ent->d_name);
-            
+
             if (cmd_flags.deref) {
                 if (stat(path, &status) == STAT_ERROR){
                     perror(path);
-                    exit(STAT_ERROR);
+                    exit_log(STAT_ERROR);
                 } 
             } else if (lstat(path, &status) == STAT_ERROR) {
                 perror(path);
-                exit(STAT_ERROR);
+                exit_log(STAT_ERROR);
             }
 
             struct dirinfo* cur_dir = &info[i++];
@@ -104,77 +112,33 @@ int traverse_dir(char dir_name[], struct dirinfo info[], struct cmdfl cmd_flags)
             cur_dir->dir_ent = *ent;
             cur_dir->status = status;  
     
-            if(strcmp(".", ent->d_name) == EXIT_SUCCESS){
-                if (cmd_flags.bytes)
-                    dir_size += status.st_size;
-                else if (cmd_flags.block_size)
-                    dir_size += (status.st_blocks*512)/blk_size;
-                else 
-                    dir_size += status.st_blocks/2;
-            }
+            if (cmd_flags.bytes)
+                cur_dir->size = status.st_size;
+            else if (cmd_flags.block_size)
+                cur_dir->size = (status.st_blocks*512)/blk_size;
+            else 
+                cur_dir->size = status.st_blocks/2;
+
+            entry_log(dir_size, path);
         }
     }
 
     closedir(dir);
 
-    return dir_size;
+    return EXIT_SUCCESS;
 }
 
-
-void duprintf(struct dirinfo info[], struct cmdfl cmd){
-
-    for (size_t j = 0; j < MAX_DIRS; j++){
-        // If it's not an empty element of the array
-        if (strcmp(info[j].dir_name, "") != 0){
-            if (cmd.count_links){
-                // Symbolic link check
-                if (!cmd.deref){
-                    if (!S_ISLNK(info[j].status.st_mode)){
-                        if (cmd.all){
-                            if (cmd.bytes)
-                                printf("%ld\t%ld\t%s\n", info[j].status.st_blocks/2, info[j].status.st_size, info[j].dir_name);
-                            else if (cmd.block_size)
-                                printf("%ld\t%s\n", (info[j].status.st_blocks*512)/blk_size, info[j].dir_name);
-                            else 
-                                printf("%ld\t%s\n", info[j].status.st_blocks/2, info[j].dir_name);
-                        } else {
-                            // Directory check
-                            if (S_ISDIR(info[j].status.st_mode)){
-                                if (cmd.bytes)
-                                    printf("%ld\t%ld\t%s\n", info[j].status.st_blocks/2, info[j].status.st_size, info[j].dir_name);
-                                else if (cmd.block_size)
-                                    printf("%ld\t%s\n", (info[j].status.st_blocks*512)/blk_size, info[j].dir_name);
-                                else 
-                                    printf("%ld\t%s\n", info[j].status.st_blocks/2, info[j].dir_name);
-                                
-                            }
-                        }
-                    }
-                } else {
-                    if (cmd.all){
-                        if (cmd.bytes)
-                            printf("%ld\t%ld\t%s\n", info[j].status.st_blocks/2, info[j].status.st_size, info[j].dir_name);
-                        else if (cmd.block_size)
-                            printf("%ld\t%s\n", (info[j].status.st_blocks*512)/blk_size, info[j].dir_name);
-                        else 
-                            printf("%ld\t%s\n", info[j].status.st_blocks/2, info[j].dir_name);
-                    } else {
-                        // Directory check
-                        if (S_ISDIR(info[j].status.st_mode)){
-                            if (cmd.bytes)
-                                printf("%ld\t%ld\t%s\n", info[j].status.st_blocks/2, info[j].status.st_size, info[j].dir_name);
-                            else if (cmd.block_size)
-                                printf("%ld\t%s\n", (info[j].status.st_blocks*512)/blk_size, info[j].dir_name);
-                            else 
-                                printf("%ld\t%s\n", info[j].status.st_blocks/2, info[j].dir_name);
-                        }
-                    }
-                }
-            }
+int get_max_children(struct dirinfo info[]){
+    int max_children = 0;
+    for (size_t i = 0; i < MAX_DIRS; i++){
+        if (strcmp(info[i].dir_name, "") != 0){
+            if (S_ISDIR(info[i].status.st_mode))
+                max_children += 1;
         }
     }
-}
 
+    return max_children;
+}
 
 void parent(int fd_in, pid_t pid, int* dir_size){
     int child_dir_size;
@@ -185,71 +149,108 @@ void parent(int fd_in, pid_t pid, int* dir_size){
     read(fd_in, &child_dir_size, sizeof(child_dir_size));
     *dir_size += child_dir_size;
 
+    char child_size_str[BUFFER_SIZE_S];
+    sprintf(child_size_str, "%d", child_dir_size);
+    recv_pipe_log(child_size_str);
+
     close(fd_in);
 }
 
+void child(int fd_out, pid_t pid, char path[], struct cmdfl cmd_flags, int dir_size){
+    create_log();
 
-void child(int fd_out, pid_t pid, char path[], struct cmdfl cmd_flags){
     if (getpgrp() == pid_main)
         setpgid(pid, getpid());
 
-    int dir_size = fetch_dir_info(path, cmd_flags);       
+    signal(SIGTERM, SIGTERM_handler);
+    signal(SIGCONT, SIGCONT_handler);
+    signal(SIGSTOP, SIGSTOP_handler);
+
+    fetch_dir_info(path, cmd_flags);       
              
     write(fd_out, &dir_size, sizeof(dir_size));
+
+    char dir_size_str[BUFFER_SIZE_S];
+    sprintf(dir_size_str, "%d", dir_size);
+    send_pipe_log(dir_size_str);
+
     close(fd_out);
 }
 
-
 int fetch_dir_info(char path[], struct cmdfl cmd_flags){   
 
-    int fd[2], status, dir_size;
+    int fd[2], status, dir_size = 0, max_children;
     pid_t pid; 
 
     struct dirinfo dir_info[MAX_DIRS]; 
 
-    dir_size = traverse_dir(path, dir_info, cmd_flags);
+    traverse_dir(path, dir_info, cmd_flags);
+    max_children = get_max_children(dir_info);
 
-    for (size_t i = 0; i < ARRAY_SIZE(dir_info); i++){
-        if (strcmp(dir_info[i].dir_name, "") != 0){
-            if (S_ISDIR(dir_info[i].status.st_mode)){   
-                // printf("%d\n", curr_depth);
-                if (curr_depth <= 3 && curr_depth > 0)
+    // duprintf(dir_info, cmd_flags, dir_size);
+
+    for (int i = 0; i <= max_children; i++){
+
+        dir_size += dir_info[i].size;
+        
+        if (strcmp(dir_info[i].dir_name, ".") == EXIT_SUCCESS){
+            if (cmd_flags.sep_dirs)
+                printf("%d\t%s\n", dir_info[i].size, dir_info[i].path);
+            else    
+                printf("%d\t%s\n", dir_size, dir_info[i].path);
+        }
+
+        if (S_ISDIR(dir_info[i].status.st_mode) 
+            && strcmp(dir_info[i].dir_name, ".") != EXIT_SUCCESS){
+    
+            if (cmd_flags.max_depth){
+                if (curr_depth <= max_depth && curr_depth > 0)
                     curr_depth--; 
                 else 
-                    return EXIT_SUCCESS;
+                    exit_log(EXIT_SUCCESS);
+            }
 
-                if (pipe(fd) < 0) {
-                    perror("pipe error");
-                    exit(PIPE_ERROR);
-                }
+            if (pipe(fd) < 0){
+                perror("pipe error");
+                exit_log(PIPE_ERROR);
+            }
 
-                switch ((pid = fork())) {
-                    case -1:
-                        perror("fork error");
-                        exit(FORK_ERROR);
-                    case 0:
-                        if (curr_depth <= 3 && curr_depth > 0)
-                            curr_depth--; 
-                        else 
-                            return EXIT_SUCCESS;                            
+            switch ((pid = fork())){
+                case -1:
+                    perror("fork error");
+                    exit_log(FORK_ERROR);
+                case 0:
+                    close(fd[RD]);
+                    child(fd[WR], pid, dir_info[i].path, cmd_flags, dir_size);
+                    break;
+                default:
+                    close(fd[WR]);
+                    parent(fd[RD], pid, &dir_size);
 
-                        close(fd[RD]);
-                        child(fd[WR], pid, dir_info[i].path, cmd_flags);
-                        break;
-                    default:
-                        duprintf(dir_info, cmd_flags); 
+                    if (cmd_flags.sep_dirs)
+                        printf("%d\t%s\n", dir_info[i].size, dir_info[i].path);
+                    else    
+                        printf("%d\t%s\n", dir_size, dir_info[i].path);
 
-                        close(fd[WR]);
-                        parent(fd[RD], pid, &dir_size);
-                        waitpid(pid, &status, WNOHANG);
-                        break;
-                }
+                    // Terminate process
+                    kill(pid, SIGTERM);
+                    sleep(2);
+                    if ((waitpid(pid, &status, WNOHANG)) >= 0)
+                        kill(pid, SIGKILL);
+                    
+                    break;
+            }
+        } else if (S_ISLNK(dir_info[i].status.st_mode) || S_ISREG(dir_info[i].status.st_mode)){
+            if (cmd_flags.all){
+                if (cmd_flags.bytes)
+                    printf("%ld\t%s\n", dir_info[i].status.st_size, dir_info[i].path);
+                else if (cmd_flags.block_size)
+                    printf("%ld\t%s\n", (dir_info[i].status.st_blocks*512)/blk_size, dir_info[i].path);
+                else 
+                    printf("%ld\t%s\n", dir_info[i].status.st_blocks/2, dir_info[i].path);
             }
         }
     }
-
-    pid_child = 0;    
-    printf("\n---------------------\n");
-
+     
     return dir_size;
 }

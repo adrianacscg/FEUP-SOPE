@@ -3,7 +3,9 @@
 #include "sigHandle.h"
 #include <signal.h>
 
+extern bool dir_is_root;
 extern int curr_depth;
+extern int max_depth;
 extern pid_t pid_main;
 
 int main(int argc, char* argv[], char* envp[]){
@@ -12,7 +14,6 @@ int main(int argc, char* argv[], char* envp[]){
 	create_log_file(argc, argv);    
 	
     pid_main = getpgrp();
-    curr_depth = 3;
 
     char __dirname[BUFFER_SIZE_S]; 
     strcpy(__dirname, get_curr_dir());
@@ -21,7 +22,6 @@ int main(int argc, char* argv[], char* envp[]){
 	init_flags(&cmd_flags);
 
     signal(SIGINT, SIGINT_handler);
-
 
     switch (argc) {
         case 1: {
@@ -63,9 +63,8 @@ int main(int argc, char* argv[], char* envp[]){
                 if (cmd_flags.block_size){
                     if (strlen(argv[1]) == 2)
                         blk_size = atoi(argv[2]);
-                    else {
+                    else 
                         blk_size = atoi(substring(argv[2], 14, strlen(argv[2])));
-                    }
                 }
 
                 fetch_dir_info(argv[argc-1], cmd_flags);
@@ -74,7 +73,8 @@ int main(int argc, char* argv[], char* envp[]){
             break;
         }
     }
-        
+    
+    // sleep(3);
     exit_log(EXIT_SUCCESS);
 }
 

@@ -45,8 +45,6 @@ void create_log_file(int argc, char *argv[]){
  	create_log();
 }
 
-
-
 void write_to_log(char *current_action_str, char *info){
 
 	double instant = instant_count();
@@ -62,8 +60,6 @@ void write_to_log(char *current_action_str, char *info){
 	size_t nbytes = strlen(log);
     write(log_filedes, log, nbytes);
 }
-
-
 
 void exit_log(int status){
 	strcpy(current_action, "EXIT");

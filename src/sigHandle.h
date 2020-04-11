@@ -1,8 +1,12 @@
-void SIGINT_handler(int signal);
+#include "utils.h"
+#include "logHandle.h"
 
-void SIGTERM_handler();
 
-void SIGCONT_handler();
+void SIGINT_handler();
 
-void SIGTSTP_handler();
+void SIGTERM_handler(int signal);
+
+void SIGCONT_handler(int signal);
+
+void SIGSTOP_handler(int signal);
 

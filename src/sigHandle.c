@@ -1,61 +1,54 @@
-#include "logHandle.h"
-#include <signal.h>
+#include "sigHandle.h"
 
-void SIGTERM_handler(){
+extern pid_t pid_child;
+
+void SIGTERM_handler(int signal){
     recv_sig_log("SIGTERM");
-    exit_log(3);
-
+    exit_log(10);
 }
 
-void SIGCONT_handler(){
+void SIGCONT_handler(int signal){
     recv_sig_log("SIGCONT");
 }
 
-void SIGTSTP_handler(){
-    recv_sig_log("SIGTSTP");
+void SIGSTOP_handler(int signal){
+    recv_sig_log("SIGSTOP");
     pause();
 }
 
 void SIGINT_handler(){
     recv_sig_log("SIGINT");
 
-    //need to suspend
-    
-
-    pid_t pid = getpid();
-    send_sig_log(pid, "SIGTSTP");
-    raise(SIGTSTP);
-    
+    if (pid_child){
+        send_sig_log(pid_child, "SIGSTOP");
+        kill(pid_child, SIGSTOP);
+    }
 
     printf("Pretende terminar o programa (T) ou continuar a sua execução (C)?\n");
 
     char answer[1];
     bool invalid_answer = true;
-
     
-    while(invalid_answer){
-        read(STDIN_FILENO,answer,1);
+    while (invalid_answer){
+        read(STDIN_FILENO, answer, 1);
 
-        if(strcmp(answer, "T") == 0){
+        if (strcmp(answer, "T") == 0){
             invalid_answer = false;
-            //terminate
-            send_sig_log(pid, "SIGTERM");
-            
-            //raise(SIGTERM);
 
-            //signal(SIGTERM, SIGTERM_handler);
+            send_sig_log(pid_child, "SIGCONT");
+            send_sig_log(pid_child, "SIGTERM");
             
+            kill(pid_child, SIGCONT);
+            kill(pid_child, SIGTERM);            
         }
-        else if(strcmp(answer, "C") == 0){
+        else if (strcmp(answer, "C") == 0){
             invalid_answer = false;
-            //continue
-            send_sig_log(pid, "SIGCONT");
-            //signal(SIGCONT, SIGCONT_handler);
-            //raise(SIGCONT);
+
+            send_sig_log(pid_child, "SIGCONT");
+            kill(pid_child, SIGCONT);
         }
-        else{
+        else
             printf("Resposta invalida, tente outra vez (T/C)\n");
-        }
     }
     
 }
